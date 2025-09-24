@@ -4,7 +4,7 @@
         "noteQuota": {
             "enabled": true,
             "enableWhenOffline": true,
-            "threshold": 20
+            "threshold": 0
         }
     },
     "visualizer": {
