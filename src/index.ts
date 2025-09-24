@@ -1035,14 +1035,14 @@ let bot = {
 						break
 					case '\x1b[A': // up
 						bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'ua', t: Date.now() })
-						if (bot.inputIndex === bot.inputHistory.length - 1)
+						if (bot.inputIndex === 0)
 							return
 						bot.inputIndex -= 1
 						bot.terminalInput = bot.inputHistory[bot.inputIndex] ?? ''
 						break
 					case '\x1b[B': // down
 						bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'da', t: Date.now() })
-						if (bot.inputIndex === 0)
+						if (bot.inputIndex === bot.inputHistory.length - 1)
 							return
 						bot.inputIndex -= 1
 						bot.terminalInput = bot.inputHistory[bot.inputIndex] ?? ''
@@ -1069,7 +1069,7 @@ let bot = {
 						})
 						bot.inputHistory.push(bot.terminalInput)
 						bot.terminalInput = ''
-						bot.inputIndex = bot.inputHistory.length - 1
+						bot.inputIndex = bot.inputHistory.length
 						bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'en', t: Date.now() })
 						await bot.db.push('data/volume', volume, true)
 						await bot.db.push('data/sustain', sustain, true)

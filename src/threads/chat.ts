@@ -89,16 +89,16 @@ parentPort.on('message', e => {
         case 'en':
             thread.inputHistory.push(thread.terminalInput)
             thread.terminalInput = ''
-            thread.inputIndex = thread.inputHistory.length - 1
+            thread.inputIndex = thread.inputHistory.length
             break
         case 'ua':
-            if (thread.inputIndex === thread.inputHistory.length - 1)
+            if (thread.inputIndex <= 0)
                 return
             thread.inputIndex -= 1
             thread.terminalInput = thread.inputHistory[thread.inputIndex] ?? ''
             break
-        case 'da':
-            if (thread.inputIndex === 0)
+        case 'da':    
+            if (thread.inputIndex >= thread.inputHistory.length - 1)
                 return
             thread.inputIndex += 1
             thread.terminalInput = thread.inputHistory[thread.inputIndex] ?? ''

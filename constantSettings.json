@@ -2,7 +2,7 @@
     "player": {
         "noteQuota": {
             "enabled": true,
-            "enableWhenOffline": true,
+            "enableWhenOffline": false,
             "threshold": 0
         }
     },
