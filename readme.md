@@ -5,4 +5,4 @@ an MPP bot.
 
 ### Usage
 - When ran, you will be prompted to enter a token.
-- This must be your bot token, and entering in incorrect or invalid token will get you sitebanned, so be careful!
+- This must be your bot token, and entering an incorrect or invalid token will get you sitebanned, so be careful!
