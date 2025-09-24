@@ -1,0 +1,17 @@
+{
+    "player": {
+        "noteQuota": {
+            "enabled": true,
+            "enableWhenOffline": true,
+            "threshold": 0
+        }
+    },
+    "visualizer": {
+        "enabled": true,
+        "maxFps": 60,
+        "buffer": {
+            "enabled": true,
+            "length": 125
+        }
+    }
+}
