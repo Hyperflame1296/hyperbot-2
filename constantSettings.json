@@ -3,8 +3,8 @@
     "player": {
         "noteQuota": {
             "enabled": true,
-            "enableWhenOffline": false,
-            "threshold": 0
+            "enableWhenOffline": true,
+            "threshold": 20
         }
     },
     "visualizer": {

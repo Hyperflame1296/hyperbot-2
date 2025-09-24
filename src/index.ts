@@ -929,8 +929,13 @@ let bot = {
 						var note = keys[e.note - 21]
 						if (!note) 
 							return
-						if ((bot.client.isConnected() && constantSettings.player.noteQuota.enableWhenOffline) && constantSettings.player.noteQuota.enabled && bot.noteQuota.points <= constantSettings.player.noteQuota.threshold)
-							return
+						if (constantSettings.player.noteQuota.enableWhenOffline) {
+							if (constantSettings.player.noteQuota.enabled && bot.noteQuota.points <= constantSettings.player.noteQuota.threshold)
+								return
+						} else {
+							if (bot.client.isConnected() && constantSettings.player.noteQuota.enabled && bot.noteQuota.points <= constantSettings.player.noteQuota.threshold)
+								return
+						}
 						if (sustain)
 							return
 						try {
