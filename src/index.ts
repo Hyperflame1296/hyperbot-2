@@ -901,8 +901,7 @@ let bot = {
         })
 		bot.client.on('notification', (e: any) => {
 			try {
-				bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'l', t: Date.now(), message: JSON.stringify(e) })
-				let message = e.html.split('<br>').map((g: string) => g?.split('</br>')).flat()
+				let message = (e.html ?? e.text).split('<br>').map((g: string) => g.split('</br>')).flat()
 				for (let m of message) {
 					let g = m.trim()
 					if (g.length <= 0)
