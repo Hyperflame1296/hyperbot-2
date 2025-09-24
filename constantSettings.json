@@ -1,4 +1,5 @@
 {
+    "room": "cheez",
     "player": {
         "noteQuota": {
             "enabled": true,
