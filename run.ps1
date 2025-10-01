@@ -19,6 +19,5 @@ if (!(Test-Path 'dist/index.js')) {
     } else {
         Write-Host 'Executing script...' -ForegroundColor Green
     }
-    npm run build
     npm start
 }

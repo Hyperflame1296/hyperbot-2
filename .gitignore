@@ -140,8 +140,8 @@ vite.config.ts.timestamp-*
 
 # hb2 stuff
 midis/
-dist/
 /.env
 /package.json
 /package-lock.json
 /localStorage.json
+/autobuild.ps1
