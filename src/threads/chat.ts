@@ -143,6 +143,7 @@ var thread = {
         rgbBg: (r: number, g: number, b: number, text: string): string => {
             return `\x1b[48;2;${Math.floor(r)};${Math.floor(g)};${Math.floor(b)}m${text}\x1b[0m`;
         },
+        reset: () => '\x1b[0m',
         bold: (text: string): string => {
             return `\x1b[1m${text}\x1b[22m`;
         },
@@ -186,22 +187,22 @@ var thread = {
             if (!e) continue
             switch (e.m) {
                 case 'l': // logs
-                    var message = `[${color.whiteBright(thread.getTime(e.t))}] ${thread.tags.info } ${parseMarkdown(e.a ?? e.message, parseUrl)}`.substring(0, width - 1)
+                    var message = `${thread.ansi.reset()}[${color.whiteBright(thread.getTime(e.t))}] ${thread.tags.info } ${parseMarkdown(e.a ?? e.message, parseUrl)}`.substring(0, width - 1)
                     str += thread.ansi.cursorTo(1, y) + ' '.repeat(width - 1)
                     str += thread.ansi.cursorTo(1, y) + message
                     break
                 case 'w': // warnings
-                    var message = `[${color.whiteBright(thread.getTime(e.t))}] ${thread.tags.warn } ${parseMarkdown(e.a ?? e.message, parseUrl)}`.substring(0, width - 1)
+                    var message = `${thread.ansi.reset()}[${color.whiteBright(thread.getTime(e.t))}] ${thread.tags.warn } ${parseMarkdown(e.a ?? e.message, parseUrl)}`.substring(0, width - 1)
                     str += thread.ansi.cursorTo(1, y) + ' '.repeat(width - 1)
                     str += thread.ansi.cursorTo(1, y) + message
                     break
                 case 'e': // errors
-                    var message = `[${color.whiteBright(thread.getTime(e.t))}] ${thread.tags.error} ${parseMarkdown(e.a ?? e.message, parseUrl)}`.substring(0, width - 1)
+                    var message = `${thread.ansi.reset()}[${color.whiteBright(thread.getTime(e.t))}] ${thread.tags.error} ${parseMarkdown(e.a ?? e.message, parseUrl)}`.substring(0, width - 1)
                     str += thread.ansi.cursorTo(1, y) + ' '.repeat(width - 1)
                     str += thread.ansi.cursorTo(1, y) + message
                     break
                 case 'j': // notifications
-                    var message = `[${color.whiteBright(thread.getTime(e.t))}] ${thread.tags.note} ${parseMarkdown(e.a ?? e.message, parseUrl)}`.substring(0, width - 1)
+                    var message = `${thread.ansi.reset()}[${color.whiteBright(thread.getTime(e.t))}] ${thread.tags.note} ${parseMarkdown(e.a ?? e.message, parseUrl)}`.substring(0, width - 1)
                     str += thread.ansi.cursorTo(1, y) + ' '.repeat(width - 1)
                     str += thread.ansi.cursorTo(1, y) + message
                     break
@@ -209,7 +210,7 @@ var thread = {
                     let msgColor = thread.hexToRGB(parseInt(e.p.color.replace('#', ''), 16))
                     let reply = thread.chatHistory.find(m => m.id && e.r && m.id === e.r)
                     let replyColor: [number, number, number] = reply && reply.p ? thread.hexToRGB(parseInt(reply.p.color.replace('#', ''), 16)) : [0.466, 0.466, 0.466]
-                    var message = `[${color.whiteBright(thread.getTime(e.t))}] [${e.p.id === 'console' ? color.greenBright(e.p.id) : color.greenBright(e.p.id.substr(0, 6))}]${reply && reply.p ? ` ${thread.ansi.rgbBg(...replyColor, color.black(`➦ ${reply.p.name ?? 'Unknown Message'}`))} ` : ' '}${thread.ansi.rgb(...msgColor, e.p.name)} ${color.white('»')} ${color.whiteBright(parseMarkdown(e.a ?? e.message, parseUrl))}`.substring(0, width - 1)
+                    var message = `${thread.ansi.reset()}[${color.whiteBright(thread.getTime(e.t))}] [${e.p.id === 'console' ? color.greenBright(e.p.id) : color.greenBright(e.p.id.substr(0, 6))}]${reply && reply.p ? ` ${thread.ansi.rgbBg(...replyColor, color.black(`➦ ${reply.p.name ?? 'Unknown Message'}`))} ` : ' '}${thread.ansi.rgb(...msgColor, e.p.name)} ${color.white('»')} ${color.whiteBright(parseMarkdown(e.a ?? e.message, parseUrl))}`.substring(0, width - 1)
                     str += thread.ansi.cursorTo(1, y) + ' '.repeat(width - 1)
                     str += thread.ansi.cursorTo(1, y) + message
                     break
