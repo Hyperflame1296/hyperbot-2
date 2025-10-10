@@ -210,7 +210,8 @@ var thread = {
                     let msgColor = thread.hexToRGB(parseInt(e.p.color.replace('#', ''), 16))
                     let reply = thread.chatHistory.find(m => m.id && e.r && m.id === e.r)
                     let replyColor: [number, number, number] = reply && reply.p ? thread.hexToRGB(parseInt(reply.p.color.replace('#', ''), 16)) : [0.466, 0.466, 0.466]
-                    var message = `${thread.ansi.reset()}[${color.whiteBright(thread.getTime(e.t))}] [${e.p.id === 'console' ? color.greenBright(e.p.id) : color.greenBright(e.p.id.substr(0, 6))}]${reply && reply.p ? ` ${thread.ansi.rgbBg(...replyColor, color.black(`➦ ${reply.p.name ?? 'Unknown Message'}`))} ` : ' '}${thread.ansi.rgb(...msgColor, e.p.name)} ${color.white('»')} ${color.whiteBright(parseMarkdown(e.a ?? e.message, parseUrl))}`.substring(0, width - 1)
+                    let msgStrip = `[${thread.getTime(e.t)}] [${e.p.id === 'console' ? e.p.id : e.p.id.substr(0, 6)}]${reply && reply.p ? ` ${`➦ ${reply.p.name ?? 'Unknown Message'}`} ` : ' '}${e.p.name} ${'»'} `
+                    var message = `${thread.ansi.reset()}[${color.whiteBright(thread.getTime(e.t))}] [${e.p.id === 'console' ? color.greenBright(e.p.id) : color.greenBright(e.p.id.substr(0, 6))}]${reply && reply.p ? ` ${thread.ansi.rgbBg(...replyColor, color.black(`➦ ${reply.p.name ?? 'Unknown Message'}`))} ` : ' '}${thread.ansi.rgb(...msgColor, e.p.name)} ${color.white('»')} ${color.whiteBright(parseMarkdown(e.a ?? e.message, parseUrl))}`.replaceAll('\x07', '').substring(0, width + msgStrip.length - 1)
                     str += thread.ansi.cursorTo(1, y) + ' '.repeat(width - 1)
                     str += thread.ansi.cursorTo(1, y) + message
                     break
