@@ -133,8 +133,6 @@ var { width, height } = workerData
 var thread = {
     terminalInput: '',
     chatHistory: [],
-    inputHistory: [],
-    inputIndex: 0,
     ansi: {
 	    cursorTo: (x: number, y: number): string => `\x1b[${y};${x}H`,
         rgb: (r: number, g: number, b: number, text: string): string => {
@@ -227,27 +225,6 @@ parentPort.on('message', e => {
     switch (e.m) {
         case 'i':
             thread.terminalInput = e.i
-            break
-        case 'en':
-            thread.inputHistory.push(thread.terminalInput)
-            thread.terminalInput = ''
-            thread.inputIndex = thread.inputHistory.length
-            break
-        case 'ua':
-            if (thread.inputIndex <= 0)
-                return
-            thread.inputIndex -= 1
-            thread.terminalInput = thread.inputHistory[thread.inputIndex] ?? ''
-            break
-        case 'da':    
-            if (thread.inputIndex >= thread.inputHistory.length - 1)
-                return
-            thread.inputIndex += 1
-            thread.terminalInput = thread.inputHistory[thread.inputIndex] ?? ''
-            break
-        case 'la':
-            break
-        case 'ra':
             break
         case 's':
             width = e.w,

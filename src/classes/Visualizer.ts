@@ -1,7 +1,7 @@
 // import: local classes
 import { Interval } from './Interval.js'
 import { Thread } from './Thread.js'
-import { Blip } from './Blip.js'
+import { Blip } from '../interfaces/Blip.js'
 
 // import: constant settings
 import constantSettings from '../../constantSettings.json' with { type: "json" }

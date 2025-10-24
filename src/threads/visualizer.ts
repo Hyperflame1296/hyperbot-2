@@ -28,6 +28,7 @@ var thread = {
         var frame = ''
         let now = performance.now()
         for (let i = 0; i < thread.keys.length; i++) {
+            let yoff = 0
             let key = thread.keys[i]
             let x = width - (87 - i) - 1
             if (!key)
@@ -43,12 +44,13 @@ var thread = {
                     continue
                 if (now - blip.t > 1000) {
                     key.blips.splice(key.blips.indexOf(blip), 1)
+                    yoff++
                     continue
                 }
                 let y = thread.blipLimit - key.blips.indexOf(blip)
                 let brightness = (1000 - (now - blip.t)) / 1000
                 let color: [number, number, number] = thread.mul(thread.hexToRGB(blip.c), brightness)
-                frame += thread.ansi.cursorTo(x, y) + thread.ansi.rgbBg(...color, ' ') + thread.ansi.reset()
+                frame += thread.ansi.cursorTo(x, y + yoff) + thread.ansi.rgbBg(...color, ' ') + thread.ansi.reset()
             }
         }
         process.stdout.write(frame)

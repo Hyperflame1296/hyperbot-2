@@ -2,7 +2,6 @@
 import { JsonDB, Config } from 'node-json-db'
 
 // import: constants
-import fetch from 'node-fetch'
 import fs from 'node:fs'
 import color from 'cli-color'
 import dotenv from 'dotenv'
@@ -356,9 +355,9 @@ let bot = {
 											`Type \`${prefix}help ::midiset\` to see the syntax of this command.`
 										])
 									else {
-										if (y > 200)
+										if (y > bot.noteQuota.max)
 											bot.send([
-												bot.tags.failure_mpp + `\`${c}\` cannot be greater than \`127\`.`, 
+												bot.tags.failure_mpp + `\`${c}\` cannot be greater than \`${bot.noteQuota.max}\`.`, 
 												`Type \`${prefix}help ::midiset\` to see the syntax of this command.`
 											])
 										else if (y < 0)
@@ -812,7 +811,7 @@ let bot = {
                     default:
                         throw new TypeError(`\`bot.send()\` - Argument [2] incompatible with type \`${typeof msgs}\``)
                 }
-                if (bot.client.isConnected())
+                if (bot.client.isConnected() && !bot.client.isConnecting())
                 	bot.client.sendArray(arr)
 				else
 					for (let m of arr) {
@@ -846,6 +845,7 @@ let bot = {
 		bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'l', t: Date.now(), message: 'Initializing client...' }) 
 		bot.client.start()
 		bot.client.setChannel(room)
+		bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 's', w: process.stdout.columns, h: process.stdout.rows })
 		bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'l', t: Date.now(), message: 'Initializing database...' }) 
         await bot.db.load()
 		!await bot.db.exists('/settings')             ? bot.db.push('/settings', {}, false) : void 0
@@ -1021,6 +1021,10 @@ let bot = {
 				bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'e', t: Date.now(), message: `bot.client.on('n'): ${err}`})
 			}
 		})
+		process.stdout.on('resize', () => {
+			console.clear()
+			bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 's', w: process.stdout.columns, h: process.stdout.rows })
+		})
 		process.stdin.on('data', async b => {
 			try {
 				let text = bot.textDecoder.decode(b)
@@ -1043,31 +1047,25 @@ let bot = {
 						bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'i', t: Date.now(), i: bot.terminalInput })
 						break
 					case '\x1b[A': // up
-						bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'ua', t: Date.now() })
 						if (bot.inputIndex <= 0)
 							return
 						bot.inputIndex -= 1
 						bot.terminalInput = bot.inputHistory[bot.inputIndex] ?? ''
+						bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'i', t: Date.now(), i: bot.terminalInput })
 						break
 					case '\x1b[B': // down
-						bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'da', t: Date.now() })
 						if (bot.inputIndex >= bot.inputHistory.length - 1)
 							return
 						bot.inputIndex += 1
 						bot.terminalInput = bot.inputHistory[bot.inputIndex] ?? ''
-						break
-					case '\x1b[C': // right
-						bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'ra', t: Date.now() })
-						break
-					case '\x1b[D': // left
-						bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'la', t: Date.now() })
+						bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'i', t: Date.now(), i: bot.terminalInput })
 						break
 					case '\n':
 					case '\r':
 					case '\r\n':
 						if (bot.terminalInput.trim().length <= 0)
 							return
-						bot.client.isConnected() ? bot.send(`\`\`\`[CONSOLE] ${bot.terminalInput}\`\`\``) : bot.send(bot.terminalInput)
+						bot.client.isConnected() && !bot.client.isConnecting() ? bot.send(`\`\`\`[CONSOLE] ${bot.terminalInput}\`\`\``) : bot.send(bot.terminalInput)
 						bot.onMessage({
 							m: 'a',
 							a: bot.terminalInput,
@@ -1079,7 +1077,7 @@ let bot = {
 						bot.inputHistory.push(bot.terminalInput)
 						bot.terminalInput = ''
 						bot.inputIndex = bot.inputHistory.length
-						bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'en', t: Date.now() })
+						bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'i', t: Date.now(), i: bot.terminalInput })
 						await bot.db.push('data/volume', volume, true)
 						await bot.db.push('data/sustain', sustain, true)
 						await bot.db.push('data/deblackVel', deblackVel, true)
