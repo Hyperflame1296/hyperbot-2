@@ -176,7 +176,7 @@ let bot = {
 				aliases: ['a'],
 				func: function(a: string[], input: string, msg: any) {
 					bot.send([
-						bot.tags.success_mpp + `Hyperbot 2 (${ver}) - The Great Refactor (not open-source yet, will be soon)`, 
+						bot.tags.success_mpp + `Hyperbot 2 (${ver}) - The Great Refactor`, 
 						'- Made by TensiveYT'
 					])
 				}
@@ -990,6 +990,13 @@ let bot = {
 				bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage(e)
 			} catch (err) {
 				bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'e', t: Date.now(), message: `bot.client.on('a'): ${err}`})
+			}
+		})
+		bot.client.on('c', (e: any) => {
+			try {
+				bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage(e)
+			} catch (err) {
+				bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'e', t: Date.now(), message: `bot.client.on('c'): ${err}`})
 			}
 		})
 		bot.client.on('n', (e: any) => {

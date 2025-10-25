@@ -230,6 +230,9 @@ parentPort.on('message', e => {
             width = e.w,
             height = e.h
             break
+        case 'c':
+            thread.chatHistory = e.c.sort((a, b) => b.t - a.t)
+            break
         default:
             if (thread.chatHistory.length >= 250)
                 thread.chatHistory.pop()
