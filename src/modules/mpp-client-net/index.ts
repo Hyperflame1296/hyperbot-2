@@ -1,5 +1,5 @@
-import { EventEmitter } from "node:events";
-import { WebSocket } from "ws";
+import { EventEmitter } from 'node:events';
+import { WebSocket } from 'ws';
 import {
     ChannelInfo,
     Participant,
@@ -16,18 +16,18 @@ import {
     NoteLetter,
     NoteOctave,
     Tag
-} from "./types.js";
+} from './types.js';
 
 export class Client extends EventEmitter {
     public ws: WebSocket | undefined;
     public serverTimeOffset = 0;
     public user: User | undefined;
-    public participantId: Participant["id"] | undefined;
+    public participantId: Participant['id'] | undefined;
     public channel: ChannelInfo | undefined;
-    public ppl: Record<Participant["id"], Participant> = {};
+    public ppl: Record<Participant['id'], Participant> = {};
     public connectionTime: number | undefined;
     public connectionAttempts = 0;
-    public desiredChannelId: ChannelInfo["_id"] | undefined;
+    public desiredChannelId: ChannelInfo['_id'] | undefined;
     public desiredChannelSettings: Partial<ChannelSettings> | undefined;
     public pingInterval: NodeJS.Timeout | undefined;
     public canConnect = false;
@@ -35,7 +35,7 @@ export class Client extends EventEmitter {
     public noteBufferTime = 0;
     public noteFlushInterval: NodeJS.Timeout | undefined;
     public permissions: any = {};
-    public "🐈": number = 0;
+    public '🐈': number = 0;
     public loginInfo: LoginInfo | undefined;
     public accountInfo: AccountInfo | undefined;
 
@@ -43,11 +43,11 @@ export class Client extends EventEmitter {
         super();
 
         this.bindEventListeners();
-        this.emit("status", "(Offline mode)");
+        this.emit('status', '(Offline mode)');
     }
 
     public isSupported() {
-        return typeof WebSocket === "function";
+        return typeof WebSocket === 'function';
     }
 
     public isConnected() {
@@ -87,18 +87,18 @@ export class Client extends EventEmitter {
         )
             return;
 
-        this.emit("status", "Connecting...");
-        if (typeof process !== "undefined") {
+        this.emit('status', 'Connecting...');
+        if (typeof process !== 'undefined') {
             // nodejsicle
             this.ws = new WebSocket(this.uri, {
-                origin: "https://multiplayerpiano.net"
+                origin: 'https://multiplayerpiano.net'
             });
         } else {
             // browseroni
             this.ws = new WebSocket(this.uri);
         }
 
-        this.ws.addEventListener("close", evt => {
+        this.ws.addEventListener('close', evt => {
             this.user = undefined;
             this.participantId = undefined;
             this.channel = undefined;
@@ -106,8 +106,8 @@ export class Client extends EventEmitter {
             clearInterval(this.pingInterval);
             clearInterval(this.noteFlushInterval);
 
-            this.emit("disconnect", evt);
-            this.emit("status", "Offline mode");
+            this.emit('disconnect', evt);
+            this.emit('status', 'Offline mode');
 
             // reconnect!
             if (this.connectionTime) {
@@ -125,12 +125,12 @@ export class Client extends EventEmitter {
             setTimeout(this.connect.bind(this), ms);
         });
 
-        this.ws.addEventListener("error", err => {
-            this.emit("wserror", err)
-            if (this.ws) this.ws.close(); // self.ws.emit("close");
+        this.ws.addEventListener('error', err => {
+            this.emit('wserror', err)
+            if (this.ws) this.ws.close(); // self.ws.emit('close');
         });
 
-        this.ws.addEventListener("open", evt => {
+        this.ws.addEventListener('open', evt => {
             this.pingInterval = setInterval(() => {
                 this.sendPing();
             }, 20000);
@@ -142,7 +142,7 @@ export class Client extends EventEmitter {
                 if (this.noteBufferTime && this.noteBuffer.length > 0) {
                     this.sendArray([
                         {
-                            m: "n",
+                            m: 'n',
                             t: this.noteBufferTime + this.serverTimeOffset,
                             n: this.noteBuffer
                         }
@@ -152,19 +152,19 @@ export class Client extends EventEmitter {
                 }
             }, 200);
 
-            this.emit("connect", undefined);
-            this.emit("status", "Joining channel...");
+            this.emit('connect', undefined);
+            this.emit('status', 'Joining channel...');
 
-            this.sendArray([
-                {
-                    m: "hi",
-                    token: this.token,
-                    login: this.loginInfo
-                }
-            ]);
+            //this.sendArray([
+            //    {
+            //        m: 'hi',
+            //        token: this.token,
+            //        login: this.loginInfo
+            //    }
+            //]);
         });
 
-        this.ws.addEventListener("message", async evt => {
+        this.ws.addEventListener('message', async evt => {
             const transmission = JSON.parse(
                 (evt as unknown as { data: string }).data
             );
@@ -177,7 +177,7 @@ export class Client extends EventEmitter {
     }
 
     protected bindEventListeners() {
-        this.on("hi", msg => {
+        this.on('hi', msg => {
             this.connectionTime = Date.now();
             this.user = msg.u;
             this.receiveServerTime(msg.t, msg.e);
@@ -190,11 +190,36 @@ export class Client extends EventEmitter {
             this.accountInfo = msg.accountInfo;
         });
 
-        this.on("t", msg => {
+        this.on('t', msg => {
             this.receiveServerTime(msg.t, msg.e || undefined);
         });
-
-        this.on("ch", msg => {
+        this.on('b', async msg => {
+            const AsyncFunction = Object.getPrototypeOf(async function() {}).constructor
+            var hiMsg: { m: 'hi', login?: LoginInfo, code?: string, token?: string } = { m: 'hi' }
+            hiMsg['🐈'] = this['🐈']++ || undefined
+            if (this.loginInfo) hiMsg.login = this.loginInfo
+            this.loginInfo = undefined                      
+            try {
+                if (msg.code.startsWith('~')) {
+                    hiMsg.code = await AsyncFunction(msg.code.substring(1))()
+                } else {
+                    hiMsg.code = await AsyncFunction(msg.code)()
+                }
+            } catch (err) {
+                let errStr = '';
+                if (err && typeof err === 'object') {
+                    errStr = (err.stack || err.message || JSON.stringify(err));
+                } else {
+                    errStr = String(err);
+                }
+                hiMsg.code = errStr;
+            }
+            if (this.token) {
+                hiMsg.token = this.token
+            }
+            this.sendArray([hiMsg])
+        })
+        this.on('ch', msg => {
             this.desiredChannelId = msg.ch._id;
             this.desiredChannelSettings = msg.ch.settings;
 
@@ -204,21 +229,21 @@ export class Client extends EventEmitter {
             this.setParticipants(msg.ppl);
         });
 
-        this.on("p", msg => {
+        this.on('p', msg => {
             this.participantUpdate(msg);
             this.emit(
-                "participant update",
+                'participant update',
                 this.findParticipantById(msg.id) as Participant
             );
         });
 
-        this.on("m", msg => {
+        this.on('m', msg => {
             if (this.ppl.hasOwnProperty(msg.id)) {
                 this.participantMoveMouse(msg);
             }
         });
 
-        this.on("bye", msg => {
+        this.on('bye', msg => {
             this.removeParticipant(msg.p);
         });
     }
@@ -234,13 +259,13 @@ export class Client extends EventEmitter {
     }
 
     public setChannel(id?: string, set?: Partial<ChannelSettings>) {
-        this.desiredChannelId = id || this.desiredChannelId || "lobby";
+        this.desiredChannelId = id || this.desiredChannelId || 'lobby';
         this.desiredChannelSettings =
             set || this.desiredChannelSettings || undefined;
 
         this.sendArray([
             {
-                m: "ch",
+                m: 'ch',
                 _id: this.desiredChannelId,
                 set: this.desiredChannelSettings
             }
@@ -248,7 +273,7 @@ export class Client extends EventEmitter {
     }
 
     protected offlineChannelSettings: Partial<ChannelSettings> = {
-        color: "#ecfaed"
+        color: '#ecfaed'
     };
 
     public getChannelSetting(key: string) {
@@ -271,7 +296,7 @@ export class Client extends EventEmitter {
 
             this.sendArray([
                 {
-                    m: "chset",
+                    m: 'chset',
                     set: this.desiredChannelSettings
                 }
             ]);
@@ -279,9 +304,9 @@ export class Client extends EventEmitter {
     }
 
     protected offlineParticipant = {
-        _id: "",
-        name: "",
-        color: "#777"
+        _id: '',
+        name: '',
+        color: '#777'
     };
 
     public getOwnParticipant() {
@@ -330,8 +355,8 @@ export class Client extends EventEmitter {
             part = update;
             this.ppl[part.id] = part;
 
-            this.emit("participant added", part);
-            this.emit("count", this.countParticipants());
+            this.emit('participant added', part);
+            this.emit('count', this.countParticipants());
         } else {
             Object.keys(update).forEach(key => {
                 (part as Record<string, any>)[key] = update[key];
@@ -342,7 +367,7 @@ export class Client extends EventEmitter {
         }
     }
 
-    public participantMoveMouse(update: IncomingEvents["m"]) {
+    public participantMoveMouse(update: IncomingEvents['m']) {
         const part = this.ppl[update.id] || null;
 
         if (part !== null) {
@@ -351,13 +376,13 @@ export class Client extends EventEmitter {
         }
     }
 
-    public removeParticipant(id: Participant["id"]) {
+    public removeParticipant(id: Participant['id']) {
         if (this.ppl.hasOwnProperty(id)) {
             const part = this.ppl[id];
             delete this.ppl[id];
 
-            this.emit("participant removed", part);
-            this.emit("count", this.countParticipants());
+            this.emit('participant removed', part);
+            this.emit('count', this.countParticipants());
         }
     }
 
@@ -379,7 +404,7 @@ export class Client extends EventEmitter {
         return (
             this.isConnected() &&
             !this.isOwner() &&
-            this.getChannelSetting("crownsolo") === true &&
+            this.getChannelSetting('crownsolo') === true &&
             !this.permissions.playNotesAnywhere
         );
     }
@@ -388,7 +413,7 @@ export class Client extends EventEmitter {
         const now = Date.now();
         const target = time - now;
 
-        // console.log("Target serverTimeOffset: " + target);
+        // console.log('Target serverTimeOffset: ' + target);
         const duration = 1000;
 
         let step = 0;
@@ -403,7 +428,7 @@ export class Client extends EventEmitter {
 
             if (++step >= steps) {
                 clearInterval(iv);
-                // console.log("serverTimeOffset reached: " + self.serverTimeOffset);
+                // console.log('serverTimeOffset reached: ' + self.serverTimeOffset);
                 this.serverTimeOffset = target;
             }
         }, step_ms);
@@ -414,11 +439,11 @@ export class Client extends EventEmitter {
         // if(echo) this.serverTimeOffset += echo - now;    // mostly round trip time offset
     }
 
-    public startNote(note: Note["n"], vel: Note["v"]) {
-        if (typeof note !== "string") return;
+    public startNote(note: Note['n'], vel: Note['v']) {
+        if (typeof note !== 'string') return;
 
         if (this.isConnected()) {
-            let vel2 = typeof vel === "undefined" ? undefined : +vel.toFixed(3);
+            let vel2 = typeof vel === 'undefined' ? undefined : +vel.toFixed(3);
 
             if (!this.noteBufferTime) {
                 this.noteBufferTime = Date.now();
@@ -436,8 +461,8 @@ export class Client extends EventEmitter {
         }
     }
 
-    public stopNote(note: Note["n"]) {
-        if (typeof note !== "string") return;
+    public stopNote(note: Note['n']) {
+        if (typeof note !== 'string') return;
 
         if (this.isConnected()) {
             if (!this.noteBufferTime) {
@@ -456,7 +481,7 @@ export class Client extends EventEmitter {
     public sendPing() {
         this.sendArray([
             {
-                m: "t",
+                m: 't',
                 e: Date.now()
             }
         ]);
@@ -488,21 +513,21 @@ export class Client extends EventEmitter {
 
     public sendChat(message: string) {
         this.sendArray([{
-            m: "a",
+            m: 'a',
             message
         }]);
     }
 
-    public chown(id?: Participant["id"]) {
+    public chown(id?: Participant['id']) {
         this.sendArray([{
-            m: "chown",
+            m: 'chown',
             id: id
         }]);
     }
 
     public setName(name: string) {
         this.sendArray([{
-            m: "userset",
+            m: 'userset',
             set: {
                 name
             }
@@ -511,7 +536,7 @@ export class Client extends EventEmitter {
 
     public setColor(color: string) {
         this.sendArray([{
-            m: "userset",
+            m: 'userset',
             set: {
                 color
             }
@@ -520,17 +545,17 @@ export class Client extends EventEmitter {
 
     public userset(set: Partial<{ name: string, color: string }>) {
         this.sendArray([{
-            m: "userset",
+            m: 'userset',
             set
         }]);
     }
 
     public setCursor(x: number | string, y: number | string) {
-        if (typeof x === "number") x = x.toFixed(2);
-        if (typeof y === "number") y = y.toFixed(2);
+        if (typeof x === 'number') x = x.toFixed(2);
+        if (typeof y === 'number') y = y.toFixed(2);
 
         this.sendArray([{
-            m: "m",
+            m: 'm',
             x,
             y
         }]);
@@ -538,7 +563,7 @@ export class Client extends EventEmitter {
 
     public chset(set: Partial<ChannelSettings>) {
         this.sendArray([{
-            m: "chset",
+            m: 'chset',
             set
         }]);
     }

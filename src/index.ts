@@ -737,7 +737,7 @@ let bot = {
 			bot.tags.failure_mpp + 'What are you trying to do?...',
 			bot.tags.failure_mpp + 'Did you know that you don\'t have permission to use this command?',
 			bot.tags.failure_mpp + 'Here\'s a tutorial on how to run that command: Step 1, you don\'t.',
-			bot.tags.failure_mpp + 'You shall not pass!.',
+			bot.tags.failure_mpp + 'You shall not pass!',
 			bot.tags.failure_mpp + 'You don\'t look like an admin!'
 		]
 		return arr[Math.floor(Math.random() * arr.length)]
@@ -745,8 +745,10 @@ let bot = {
 	send: (...args: string[]) => {
         switch (args.length) {
             case 1:
-                var msgs = args[0] ?? []
+                var msgs: string | string[] = args[0] ?? []
                 var arr = []
+				if (!msgs || msgs.length == 0)
+					return
                 switch (typeof msgs) {
                     case 'string':
                         arr.push({
@@ -769,7 +771,7 @@ let bot = {
                     default:
                         throw new TypeError(`Method \`bot.send()\` incompatible with type \`${typeof msgs}\``)
                 }
-				if (bot.client.isConnected())
+				if (bot.client.isConnected() && !bot.client.isConnecting())
                 	bot.client.sendArray(arr)
 				else
 					for (let m of arr) {
@@ -785,7 +787,7 @@ let bot = {
                 break
             case 2:
                 var r = args[0]
-                var msgs = args[1] ?? []
+                var msgs: string | string[] = args[1] ?? []
                 var arr = []
                 switch (typeof msgs) {
                     case 'string':
@@ -1108,7 +1110,7 @@ let bot = {
 		let command: Command
 		for (let g of categories) {
 			let commands = bot.commands[g]
-			command = commands.find((h: Command) => h.name === t || h.aliases.includes(t))
+			command = commands.find((h: Command) => h.name === t.toLowerCase() || h.aliases.includes(t.toLowerCase()))
 			if (command)
 				break
 		}
