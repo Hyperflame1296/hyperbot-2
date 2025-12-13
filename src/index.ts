@@ -190,7 +190,7 @@ let bot = {
 				aliases: ['p'],
 				func: async function(a: string[], input: string, msg: any) {
 					let c = a[1]?.trim() ?? '',
-						d = a[2]?.toLowerCase()?.trim() ?? ''
+						d = a[2]?.trim() ?? ''
 					try {
 						if (c === '') {
 							bot.send([
@@ -206,7 +206,17 @@ let bot = {
 												bot.tags.failure_mpp + `Please specify the URL or path to the MIDI you want to play.`, 
 												`Type \`${prefix}help ::midi\` to see the syntax of this command.`
 											])
-										else if (fs.existsSync(`midis/${d}.mid`)) {
+										else if (d === 'random') {
+											let midis = fs.readdirSync('midis/normal')
+											let midi = midis[Math.floor(Math.random() * midis.length)].replace('.mid', '')
+											bot.send(bot.tags.success_mpp + `Loading MIDI \`normal/${midi}\`...`)
+											let start = performance.now()
+											await bot.player.loadFile(`midis/normal/${midi}.mid`)
+											let end = performance.now()
+											let time = end - start
+											bot.send(bot.tags.success_mpp + `Loaded MIDI in \`${(time / 1000).toFixed(2)}s\`! | Playing MIDI \`${midi}\`.`)
+											bot.player.play()
+										} else if (fs.existsSync(`midis/${d}.mid`)) {
 											bot.send(bot.tags.success_mpp + `Loading MIDI \`${d}\`...`)
 											let start = performance.now()
 											await bot.player.loadFile(`midis/${d}.mid`)
@@ -1110,7 +1120,7 @@ let bot = {
 		let command: Command
 		for (let g of categories) {
 			let commands = bot.commands[g]
-			command = commands.find((h: Command) => h.name === t.toLowerCase() || h.aliases.includes(t.toLowerCase()))
+			command = commands.find((h: Command) => h.name.toLowerCase() === t.toLowerCase() || h.aliases.includes(t.toLowerCase()))
 			if (command)
 				break
 		}
