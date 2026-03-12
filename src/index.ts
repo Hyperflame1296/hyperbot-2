@@ -63,7 +63,7 @@ let bot = {
     textDecoder: new TextDecoder,
     initialized: false,
 	player: new Player,
-	client: new Client('wss://mppclone.com', process.env.TOKEN),
+	client: new Client('wss://backend.multiplayerpiano.net', process.env.TOKEN),
 	noteQuota: new NoteQuota(undefined, NoteQuota.PARAMS_OFFLINE),
 	mouse: {
         gravity: 0.1,
@@ -128,7 +128,19 @@ let bot = {
                 bot.mouse.y += bot.mouse.vspeed
             bot.mouse.hspeed = Math.min(Math.max(bot.mouse.hspeed, -1), 1)
             bot.client.setCursor(bot.mouse.x, bot.mouse.y)
-        })
+        }),
+		new Interval('crown', 5, function() {
+			if (
+				bot.client.channel && 
+				bot.client.channel.crown && 
+				!bot.client.channel.crown.participantId && 
+				Date.now() - bot.client.channel.crown.time >= 14800
+			)
+                bot.client.sendArray([{
+                    m: 'chown',
+                    id: bot.client.participantId
+                }])
+        }),
 	],
 	// commands
 	commands: {
@@ -181,6 +193,19 @@ let bot = {
 					])
 				}
 			},
+			{
+				name: 'ping',
+				desc: 'Shows the client\'s current ping.',
+				syntax: `${prefix}ping`,
+				aliases: ['e'],
+				func: function() {
+					bot.client.once('t', t => { 
+						let ping = Date.now() - t.e
+						bot.send(bot.tags.success_mpp + `Pong! \`[${ping}ms]\``)
+					}); 
+					bot.client.sendPing()
+				}
+			}
 		],
 		midi: [
 			{
@@ -227,15 +252,15 @@ let bot = {
 										} else
 											try {
 												let url = new URL(d)
-												bot.send(bot.tags.success_mpp + `Fetching MIDI \`${d}\`...`)
+												bot.send(bot.tags.success_mpp + `Fetching MIDI \`${url.pathname.split('/').pop()}\`...`)
 												let f = await fetch(url)
 												let type = f.headers.get('Content-Type')
 												if (!f.ok) throw new Error(bot.tags.failure_mpp + `HTTP error, status: ${f.status}`)
 												if (type && !(type.includes('midi') || type.includes('mid'))) throw new Error(bot.tags.failure_mpp + `The URL you provided is not a MIDI file. Content-Type: \`${type}\``)
 												let data = await f.arrayBuffer()
-												bot.send(bot.tags.success_mpp + `Loading MIDI \`${d}\`...`)
+												bot.send(bot.tags.success_mpp + `Loading MIDI \`${url.pathname.split('/').pop()}\`...`)
 												await bot.player.loadArrayBuffer(data)
-												bot.send(bot.tags.success_mpp + `Playing MIDI \`${d}\`.`)
+												bot.send(bot.tags.success_mpp + `Playing MIDI \`${url.pathname.split('/').pop()}\`.`)
 												bot.player.play()
 											} catch (err) {
 												bot.send(bot.tags.failure_mpp + `\`\`\`${err}\`\`\``)
@@ -612,7 +637,7 @@ let bot = {
 											id: msg.p.id
 										}
 									])
-									bot.send(bot.tags.success_mpp + `Gave the crown to \'${bot.client.findParticipantById(msg.p.id).name}\'!`)
+									bot.send(bot.tags.success_mpp + `Gave the crown to \`\`\`${bot.client.findParticipantById(msg.p.id).name}\`\`\`!`)
 								} else {
 									if (bot.client.ppl[d]) {
 										if (bot.client.participantId !== d) {
@@ -622,7 +647,7 @@ let bot = {
 													id: d
 												}
 											])
-											bot.send(bot.tags.success_mpp + `Gave the crown to \'${bot.client.findParticipantById(d).name}\'!`)
+											bot.send(bot.tags.success_mpp + `Gave the crown to \`\`\`${bot.client.findParticipantById(d).name}\`\`\`!`)
 										} else {
 											bot.send([
 												bot.tags.failure_mpp + `The bot cannot give the crown to itself.`, 
@@ -893,11 +918,13 @@ let bot = {
                 }
             ])
             bot.intervals.find((i: Interval) => i.name === 'mouse').start()
+			bot.intervals.find((i: Interval) => i.name === 'crown').start()
         })
         bot.client.on('disconnect', (e: any) => {
 			try {
 				bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 'l', t: Date.now(), message: bot.client.canConnect ? `The bot has disconnected. Attempting to reconnect...` : 'The client has been turned off.' })
 				bot.intervals.find((i: Interval) => i.name === 'mouse').stop()
+				bot.intervals.find((i: Interval) => i.name === 'crown').stop()
 				bot.client.connect()
 				bot.noteQuota.setParams(NoteQuota.PARAMS_OFFLINE)
 			} catch (err) {
@@ -1042,7 +1069,8 @@ let bot = {
 		})
 		process.stdout.on('resize', () => {
 			console.clear()
-			bot.threads.find((t: Thread) => t.name === 'chat').worker.postMessage({ m: 's', w: process.stdout.columns, h: process.stdout.rows })
+			for (let thread of bot.threads)
+				thread.worker.postMessage({ m: 's', w: process.stdout.columns, h: process.stdout.rows })
 		})
 		process.stdin.on('data', async b => {
 			try {

@@ -78,6 +78,10 @@ parentPort.on('message', e => {
                 }
             }
             break
+        case 's':
+            width = e.w
+            height = e.h
+            break
     }
 })
 

@@ -138,10 +138,12 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# hb2 stuff
+# my stuff
 midis/
 /.env
 /package.json
 /package-lock.json
 /localStorage.json
 /autobuild.ps1
+/hb2.cmd
+/hb2.lnk
